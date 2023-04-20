@@ -12,22 +12,22 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class Rec {
+public class RecommendationService {
 
     private final UserService userService;
     private final FilmService filmService;
 
     public Map<Film, Double> getRecommendedFilms(Map<User, Map<Film, Double>> marks, Long userId) {
-        Map<Film, Map <Film, Double>> diff = new HashMap<>();
-        Map<Film, Map <Film, Integer>> freq = new HashMap<>();
+        Map<Film, Map<Film, Double>> diff = new HashMap<>();
+        Map<Film, Map<Film, Integer>> freq = new HashMap<>();
 
         for (Map<Film, Double> userMarks : marks.values()) {
-            for(Map.Entry<Film, Double> e: userMarks.entrySet()) {
+            for (Map.Entry<Film, Double> e : userMarks.entrySet()) {
                 if (!diff.containsKey(e.getKey())) {
                     diff.put(e.getKey(), new HashMap<>());
                     freq.put(e.getKey(), new HashMap<>());
                 }
-                for(Map.Entry<Film, Double> e2: userMarks.entrySet()) {
+                for (Map.Entry<Film, Double> e2 : userMarks.entrySet()) {
                     int oldCount = 0;
                     if (freq.get(e.getKey()).containsKey(e2.getKey())) {
                         oldCount = freq.get(e.getKey()).get(e2.getKey());
@@ -66,8 +66,6 @@ public class Rec {
                 uFreq.put(k, uFreq.get(k) + freq.get(k).get(j));
             }
         }
-
-
 
 
         HashMap<Film, Double> clean = new HashMap<>();
