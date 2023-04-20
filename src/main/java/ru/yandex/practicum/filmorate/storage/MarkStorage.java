@@ -21,7 +21,5 @@ public interface MarkStorage {
 
     Optional<Film> findById(Long id);
 
-    Boolean isExistMark(Long filmId, Long userId);
-
     Map<Long, Map<Long, Double>> findDataForRecommendations();
 }

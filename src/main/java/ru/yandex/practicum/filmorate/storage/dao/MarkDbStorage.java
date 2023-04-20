@@ -42,6 +42,16 @@ public class MarkDbStorage implements MarkStorage {
                     .directors(new HashSet<>())
                     .build());
 
+    static final ResultSetExtractor<Map<Long, Map<Long, Double>>> userMarkExtractor = rs -> {
+        Map<Long, Map<Long, Double>> userMarks = new HashMap<>();
+        while (rs.next()) {
+            userMarks.putIfAbsent(rs.getLong("USER_ID"), new HashMap<>());
+            userMarks.get(rs.getLong("USER_ID"))
+                    .putIfAbsent(rs.getLong("FILM_ID"), rs.getDouble("RATE"));
+        }
+        return userMarks;
+    };
+
     @Override
     public Optional<Mark> find(Long filmId, Long userId) {
         try {
@@ -136,19 +146,6 @@ public class MarkDbStorage implements MarkStorage {
         }
     }
 
-
-    @Override
-    public Boolean isExistMark(Long filmId, Long userId) {
-        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT * FROM FILM_MARKS " +
-                        "WHERE FILM_ID = :FILM_ID " +
-                        "AND USER_ID = :USER_ID);",
-                new MapSqlParameterSource()
-                        .addValue("USER_ID", userId)
-                        .addValue("FILM_ID", filmId),
-                Boolean.class));
-    }
-
     @Override
     public Map<Long, Map<Long, Double>> findDataForRecommendations() {
         return jdbcTemplate.query(
@@ -175,24 +172,4 @@ public class MarkDbStorage implements MarkStorage {
                 .addValue("USER_ID", mark.getUserId())
                 .addValue("MARK", mark.getValue());
     }
-
-    static final ResultSetExtractor<Map<Long, Set<Long>>> userLikesExtractor = rs -> {
-        Map<Long, Set<Long>> userLikes = new HashMap<>();
-        while (rs.next()) {
-            userLikes.putIfAbsent(rs.getLong("USER_ID"), new HashSet<>());
-            userLikes.get(rs.getLong("USER_ID"))
-                    .add(rs.getLong("FILM_ID"));
-        }
-        return userLikes;
-    };
-
-    static final ResultSetExtractor<Map<Long, Map<Long, Double>>> userMarkExtractor = rs -> {
-        Map<Long, Map<Long, Double>> userMarks = new HashMap<>();
-        while (rs.next()) {
-            userMarks.putIfAbsent(rs.getLong("USER_ID"), new HashMap<>());
-            userMarks.get(rs.getLong("USER_ID"))
-                    .putIfAbsent(rs.getLong("FILM_ID"), rs.getDouble("RATE"));
-        }
-        return userMarks;
-    };
 }
