@@ -2,16 +2,12 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.IncorrectObjectIdException;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.enums.Operation;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,14 +18,13 @@ import java.util.Optional;
 public class ReviewService {
 
     private final ReviewStorage reviewStorage;
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
     private final EventService eventService;
+    private final ExistService existService;
 
     public Review createReview(Review review) {
-        assertUserExists(review.getUserId());
-        assertFilmExists(review.getFilmId());
-        assertReviewNotExists(review.getUserId(), review.getFilmId());
+        existService.assertUserExists(review.getUserId());
+        existService.assertFilmExists(review.getFilmId());
+        existService.assertReviewNotExists(review.getUserId(), review.getFilmId());
         Optional<Review> result = reviewStorage.createReview(review);
         if (result.isEmpty()) {
             log.warn("Review of user: {} for film: {} is not created.", review.getUserId(), review.getFilmId());
@@ -44,9 +39,9 @@ public class ReviewService {
     }
 
     public Review updateReview(Review review) {
-        assertUserExists(review.getUserId());
-        assertFilmExists(review.getFilmId());
-        assertReviewExists(review.getReviewId());
+        existService.assertUserExists(review.getUserId());
+        existService.assertFilmExists(review.getFilmId());
+        existService.assertReviewExists(review.getReviewId());
         log.info("Обновление отзыва. Пользователь {} Отзыв: {}", review.getUserId(), review.getReviewId());
 
         addFeed(reviewStorage.findReviewById(review.getReviewId()).orElseThrow().getUserId(),
@@ -56,7 +51,7 @@ public class ReviewService {
     }
 
     public void deleteReview(Long reviewId) {
-        assertReviewExists(reviewId);
+        existService.assertReviewExists(reviewId);
         Review review = findReviewById(reviewId);
         Optional<Review> result = reviewStorage.deleteReview(reviewId);
         if (result.isPresent()) {
@@ -79,16 +74,16 @@ public class ReviewService {
 
     public List<Review> findAllReviews(Long filmId, Integer count) {
         if (filmId != null) {
-            assertFilmExists(filmId);
+            existService.assertFilmExists(filmId);
             return reviewStorage.findAllReviewsByFilmId(filmId, count);
         }
         return reviewStorage.findAllReviews(count);
     }
 
     public void addReviewMark(Long reviewId, Long userId, Boolean isLike) {
-        assertReviewExists(reviewId);
-        assertUserExists(userId);
-        assertReviewMarkNotExists(reviewId, userId, isLike);
+        existService.assertReviewExists(reviewId);
+        existService.assertUserExists(userId);
+        existService.assertReviewMarkNotExists(reviewId, userId, isLike);
         if (reviewStorage.findReviewMark(reviewId, userId, !(isLike)).isPresent()) {
             updateReviewMark(reviewId, userId, isLike);
             return;
@@ -104,9 +99,9 @@ public class ReviewService {
     }
 
     public void updateReviewMark(Long reviewId, Long userId, Boolean isLike) {
-        assertReviewExists(reviewId);
-        assertUserExists(userId);
-        assertReviewMarkNotExists(reviewId, userId, isLike);
+        existService.assertReviewExists(reviewId);
+        existService.assertUserExists(userId);
+        existService.assertReviewMarkNotExists(reviewId, userId, isLike);
         Optional<ReviewMark> result = reviewStorage.updateReviewMark(reviewId, userId, isLike);
         if (result.isEmpty()) {
             log.warn("Mark of review id: {} from user id: {} with value {} is not updated.",
@@ -118,7 +113,7 @@ public class ReviewService {
     }
 
     public void deleteReviewMark(Long reviewId, Long userId, Boolean isLike) {
-        assertReviewMarkExists(reviewId, userId, isLike);
+        existService.assertReviewMarkExists(reviewId, userId, isLike);
         Optional<ReviewMark> result = reviewStorage.removeReviewMark(reviewId, userId, isLike);
 
         if (result.isPresent()) {
@@ -127,61 +122,6 @@ public class ReviewService {
             throw new IncorrectObjectIdException(String.format(
                     "Mark of review id: %d from user id: %d with value %b is not deleted.",
                     reviewId, userId, isLike));
-        }
-    }
-
-    private void assertReviewExists(Long reviewId) {
-        Optional<Review> existedReview = reviewStorage.findReviewById(reviewId);
-        if (existedReview.isEmpty()) {
-            log.warn("Review id: {} not found.", reviewId);
-            throw new IncorrectObjectIdException(String.format("Review id: %d not found.", reviewId));
-        }
-    }
-
-    private void assertReviewNotExists(Long userId, Long filmId) {
-        if (reviewStorage.isExistReview(userId, filmId)) {
-            log.warn("Film {} already has a review from a user {}.", userId, filmId);
-            throw new IncorrectObjectIdException(String.format("Film %d already has a review from a user %d.",
-                    userId, filmId));
-        }
-    }
-
-    private void assertFilmExists(Long filmId) {
-        Optional<Film> existedFilm = filmStorage.findById(filmId);
-        if (existedFilm.isEmpty()) {
-            log.warn("Film id: {} not found.", filmId);
-            throw new IncorrectObjectIdException(String.format("Film id: %d not found.", filmId));
-        }
-    }
-
-    private void assertUserExists(Long userId) {
-        Optional<User> existedUser = userStorage.findById(userId);
-        if (existedUser.isEmpty()) {
-            log.warn("User id: {} not found.", userId);
-            throw new IncorrectObjectIdException(String.format("User id: %d not found.", userId));
-        }
-    }
-
-    private void assertReviewMarkExists(Long reviewId, Long userId, Boolean isLike) {
-        Optional<ReviewMark> existedMark = reviewStorage.findReviewMark(reviewId, userId, isLike);
-        if (existedMark.isEmpty()) {
-            log.warn("Mark of review id: {} from user id: {} with value {} not found.",
-                    reviewId, userId, isLike);
-            throw new IncorrectObjectIdException(String.format(
-                    "Mark of review id: %d from user id: %d with value %b not found.",
-                    reviewId, userId, isLike)
-            );
-        }
-    }
-
-    private void assertReviewMarkNotExists(Long reviewId, Long userId, Boolean isLike) {
-        Optional<ReviewMark> existedMark = reviewStorage.findReviewMark(reviewId, userId, isLike);
-        if (existedMark.isPresent()) {
-            log.warn("Mark of review id: {} from user id: {} with value {} already created.",
-                    reviewId, userId, isLike);
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    String.format("Mark of review id: %d from user id: %d with value %b already created.",
-                            reviewId, userId, isLike));
         }
     }
 

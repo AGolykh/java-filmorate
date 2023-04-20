@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.IncorrectObjectIdException;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
@@ -15,7 +14,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class DirectorService {
+
     private final DirectorStorage directorStorage;
+    private final ExistService existService;
 
     public List<Director> getAll() {
         List<Director> result = directorStorage.findAll();
@@ -44,23 +45,14 @@ public class DirectorService {
     }
 
     public Director updateDirector(Director director) {
-        Optional<Director> result = directorStorage.updateDirector(director);
-        if (result.isEmpty()) {
-            log.warn("Director {} {} is not updated", director.getId(), director.getName());
-            throw new IncorrectObjectIdException(String.format("Director %d %s is not update.",
-                    director.getId(), director.getName()));
-        }
-        log.info("Director {} {} updated", result.get().getId(), result.get().getName());
-        return result.get();
+        existService.assertDirectorExists(director.getId());
+        log.info("Director {} {} updated", director.getId(), director.getName());
+        return directorStorage.updateDirector(director).orElseThrow();
     }
 
     public void deleteDirector(Long directorId) {
-        Optional<Director> result = directorStorage.findById(directorId);
-        if (result.isEmpty()) {
-            log.warn("Director {} is not found.", directorId);
-            throw new IncorrectParameterException(String.format("Director %d is not found.", directorId));
-        }
-        log.info("Director {} deleted", result.get().getName());
+        existService.assertDirectorExists(directorId);
+        log.info("Director {} deleted", directorId);
         directorStorage.removeDirector(directorId);
     }
 }

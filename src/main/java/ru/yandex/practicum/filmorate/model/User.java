@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
-    @Positive(message = "Идентификатор не может быть отрицательным.")
+    @Positive(message = "Идентификатор пользователя не может быть отрицательным.")
     Long id;
     @Email(message = "Некорректный Email.")
     String email;

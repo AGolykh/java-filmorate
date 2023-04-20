@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.validators.after.After;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +19,8 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
+
+    @Positive(message = "Идентификатор фильма не может быть отрицательным.")
     Long id;
     @NotBlank(message = "Название фильма не может быть пустым.")
     @NotNull(message = "Название фильма быть пустым.")
