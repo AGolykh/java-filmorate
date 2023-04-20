@@ -14,6 +14,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class LikesDbStorage implements LikesStorage {
     private final NamedParameterJdbcTemplate jdbcTemplate;
+
     static final ResultSetExtractor<Map<Long, Set<Long>>> filmLikesExtractor = rs -> {
         Map<Long, Set<Long>> filmLikes = new HashMap<>();
         while (rs.next()) {
@@ -23,6 +24,7 @@ public class LikesDbStorage implements LikesStorage {
         }
         return filmLikes;
     };
+
     static final ResultSetExtractor<Map<Long, Set<Long>>> userLikesExtractor = rs -> {
         Map<Long, Set<Long>> userLikes = new HashMap<>();
         while (rs.next()) {

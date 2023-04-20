@@ -3,8 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,18 +14,21 @@ public class RecommendationService {
 
     private final UserService userService;
     private final FilmService filmService;
+    private final MarkService markService;
 
-    public Map<Film, Double> getRecommendedFilms(Map<User, Map<Film, Double>> marks, Long userId) {
-        Map<Film, Map<Film, Double>> diff = new HashMap<>();
-        Map<Film, Map<Film, Integer>> freq = new HashMap<>();
+    public Map<Long, Double> getRecommendedFilms(Map<Long, Map<Long, Double>> marks, Long userId) {
+        //(Map<userId, Map<filmId, mark>> marks, Long userId)
 
-        for (Map<Film, Double> userMarks : marks.values()) {
-            for (Map.Entry<Film, Double> e : userMarks.entrySet()) {
+        Map<Long, Map <Long, Double>> diff = new HashMap<>();
+        Map<Long, Map <Long, Integer>> freq = new HashMap<>();
+
+        for (Map<Long, Double> userMarks : marks.values()) {
+            for(Map.Entry<Long, Double> e: userMarks.entrySet()) {
                 if (!diff.containsKey(e.getKey())) {
                     diff.put(e.getKey(), new HashMap<>());
                     freq.put(e.getKey(), new HashMap<>());
                 }
-                for (Map.Entry<Film, Double> e2 : userMarks.entrySet()) {
+                for(Map.Entry<Long, Double> e2: userMarks.entrySet()) {
                     int oldCount = 0;
                     if (freq.get(e.getKey()).containsKey(e2.getKey())) {
                         oldCount = freq.get(e.getKey()).get(e2.getKey());
@@ -43,23 +44,23 @@ public class RecommendationService {
             }
         }
 
-        for (Film film1 : diff.keySet()) {
-            for (Film film2 : diff.get(film1).keySet()) {
-                double oldValue = diff.get(film1).get(film2);
-                int count = freq.get(film1).get(film2);
-                diff.get(film1).put(film2, oldValue / count);
+        for (Long i : diff.keySet()) {
+            for (Long j : diff.get(i).keySet()) {
+                double oldValue = diff.get(i).get(j);
+                int count = freq.get(i).get(j);
+                diff.get(i).put(j, oldValue / count);
             }
         }
 
-        Map<Film, Double> userMarks = marks.get(userService.findById(userId));
-        Map<Film, Double> uPred = new HashMap<>();
-        Map<Film, Integer> uFreq = new HashMap<>();
-        for (Film fid : diff.keySet()) {
+        Map<Long, Double> userMarks = marks.get(userId);
+        Map<Long, Double> uPred = new HashMap<>();
+        Map<Long, Integer> uFreq = new HashMap<>();
+        for (Long fid : diff.keySet()) {
             uPred.put(fid, 0.0);
             uFreq.put(fid, 0);
         }
-        for (Film j : userMarks.keySet()) {
-            for (Film k : diff.keySet()) {
+        for (Long j : userMarks.keySet()) {
+            for (Long k : diff.keySet()) {
                 double predictedValue = diff.get(k).get(j) + userMarks.get(j);
                 double finalValue = predictedValue * freq.get(k).get(j);
                 uPred.put(k, uPred.get(k) + finalValue);
@@ -67,14 +68,13 @@ public class RecommendationService {
             }
         }
 
-
-        HashMap<Film, Double> clean = new HashMap<>();
-        for (Film j : uPred.keySet()) {
+        HashMap<Long, Double> clean = new HashMap<>();
+        for (Long j : uPred.keySet()) {
             if (uFreq.get(j) > 0) {
                 clean.put(j, uPred.get(j) / uFreq.get(j));
             }
         }
-        for (Film j : diff.keySet()) {
+        for (Long j : diff.keySet()) {
             if (userMarks.containsKey(j)) {
                 clean.put(j, userMarks.get(j));
             } else if (!clean.containsKey(j)) {

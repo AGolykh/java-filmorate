@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mark;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface MarkStorage {
@@ -14,5 +17,11 @@ public interface MarkStorage {
 
     Optional<Mark> remove(Long filmId, Long userId);
 
+    List<Film> findAllFilms(int size);
+
+    Optional<Film> findById(Long id);
+
     Boolean isExistMark(Long filmId, Long userId);
+
+    Map<Long, Map<Long, Double>> findDataForRecommendations();
 }

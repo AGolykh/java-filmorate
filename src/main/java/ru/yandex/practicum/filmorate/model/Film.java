@@ -31,7 +31,7 @@ public class Film {
     LocalDate releaseDate;
     @Min(value = 1, message = "Продолжительность не может быть отрицательной.")
     int duration;
-    int rate;
+    double rate;
     Mpa mpa;
     Set<Genre> genres = new HashSet<>();
     Set<Long> likes = new HashSet<>();
