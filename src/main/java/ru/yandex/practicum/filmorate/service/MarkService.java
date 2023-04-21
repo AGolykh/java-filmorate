@@ -20,6 +20,7 @@ public class MarkService {
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
     private final MarkStorage markStorage;
+    private final FriendStorage friendStorage;
     private final ExistService existService;
 
 
@@ -84,11 +85,11 @@ public class MarkService {
         return result.get();
     }
 
-    public Map<Long, Map<Long, Double>> getDataForRecommendations() {
+    public Map<User, Map<Film, Double>> getDataForRecommendations() {
         return markStorage.findDataForRecommendations();
     }
 
-    private void addDataFilms(Collection<Film> films) {
+    private void addDataFilms(List<Film> films) {
         Map<Long, Film> filmsMap = films
                 .stream()
                 .collect(Collectors.toMap(Film::getId, Function.identity()));
@@ -107,6 +108,24 @@ public class MarkService {
             }
             if (Objects.requireNonNull(directorsMap).containsKey(film.getId())) {
                 film.setDirectors(directorsMap.get(film.getId()));
+            }
+        });
+    }
+
+    private void addDataUsers(List<User> users) {
+        Map<Long, User> usersMap = users
+                .stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<Long, Set<Long>> friendsMap = friendStorage.findByUsers(usersMap.keySet());
+        Map<Long, Set<Long>> likesMap = likesStorage.findByUsers(usersMap.keySet());
+        users.forEach(user -> {
+            user.setFriends(new HashSet<>());
+            user.setLikeFilms(new HashSet<>());
+            if (Objects.requireNonNull(friendsMap).containsKey(user.getId())) {
+                user.setFriends(friendsMap.get(user.getId()));
+            }
+            if (Objects.requireNonNull(likesMap).containsKey(user.getId())) {
+                user.setLikeFilms(likesMap.get(user.getId()));
             }
         });
     }

@@ -17,7 +17,6 @@ public class RecommendationService {
     private final MarkService markService;
 
     public Map<Long, Double> getRecommendedFilms(Map<Long, Map<Long, Double>> marks, Long userId) {
-        //(Map<userId, Map<filmId, mark>> marks, Long userId)
 
         Map<Long, Map <Long, Double>> diff = new HashMap<>();
         Map<Long, Map <Long, Integer>> freq = new HashMap<>();

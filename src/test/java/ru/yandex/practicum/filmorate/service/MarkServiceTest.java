@@ -48,6 +48,12 @@ class MarkServiceTest {
         film2Id = film2.getId();
         film3 = filmService.create(film3);
         film3Id = film3.getId();
+        film4 = filmService.create(film4);
+        film4Id = film4.getId();
+        film5 = filmService.create(film5);
+        film5Id = film5.getId();
+        film6 = filmService.create(film6);
+        film6Id = film6.getId();
 
         user1 = userService.create(user1);
         user1Id = user1.getId();
@@ -120,28 +126,39 @@ class MarkServiceTest {
                 markService.findById(1L));
     }
 
+    @Test
     void getRecommendation() {
-        markService.addMark(film1Id, user1Id, 3);
-        markService.addMark(film1Id, user2Id, 5);
-        markService.addMark(film1Id, user3Id, 6);
+        markService.addMark(film1Id, user1Id, (int)(Math.random() * 10));
+        markService.addMark(film1Id, user3Id, (int)(Math.random() * 10));
+        markService.addMark(film1Id, user4Id, (int)(Math.random() * 10));
 
-        markService.addMark(film2Id, user1Id, 5);
-        markService.addMark(film2Id, user2Id, 7);
-        markService.addMark(film2Id, user3Id, 8);
+        markService.addMark(film2Id, user5Id, (int)(Math.random() * 10));
+        markService.addMark(film2Id, user6Id, (int)(Math.random() * 10));
 
-        markService.addMark(film3Id, user1Id, 7);
-        markService.addMark(film3Id, user2Id, 9);
-        markService.addMark(film3Id, user3Id, 10);
+        markService.addMark(film3Id, user1Id, (int)(Math.random() * 10));
+        markService.addMark(film3Id, user5Id, (int)(Math.random() * 10));
+        markService.addMark(film3Id, user6Id, (int)(Math.random() * 10));
 
-        Film film1WithMarks1 = markService.findById(film1Id);
-        Film film1WithMarks2 = markService.findById(film2Id);
-        Film film1WithMarks3 = markService.findById(film3Id);
+        markService.addMark(film4Id, user1Id, (int)(Math.random() * 10));
+        markService.addMark(film4Id, user2Id, (int)(Math.random() * 10));
+        markService.addMark(film4Id, user6Id, (int)(Math.random() * 10));
 
-        assertThat(film1WithMarks1.getRate()).isEqualTo((6.0 + 5.0 + 3.0) / 3.0);
-        assertThat(film1WithMarks2.getRate()).isEqualTo((8.0 + 7.0 + 5.0) / 3.0);
-        assertThat(film1WithMarks3.getRate()).isEqualTo((10.0 + 9.0 + 7.0) / 3.0);
+        markService.addMark(film5Id, user1Id, (int)(Math.random() * 10));
+        markService.addMark(film5Id, user2Id, (int)(Math.random() * 10));
+        markService.addMark(film5Id, user5Id, (int)(Math.random() * 10));
+
+        markService.addMark(film6Id, user2Id, (int)(Math.random() * 10));
+        markService.addMark(film6Id, user3Id, (int)(Math.random() * 10));
+        markService.addMark(film6Id, user6Id, (int)(Math.random() * 10));
+
+
+        Map<User, Map<Film, Double>> rec = markService.getDataForRecommendations();
+
+        Map<User, Map<Film, Double>> rec2 = SlopeOne.slopeOne(rec);
 
         List<Film> collection = markService.getAllWithMarks(10);
+
+
         assertThat(collection.size()).isEqualTo(3);
         assertThat(collection).asList().containsAnyOf(
                 markService.findById(3L),
@@ -181,8 +198,8 @@ class MarkServiceTest {
                 .directors(new HashSet<>())
                 .build();
 
-        film1 = Film.builder()
-                .name("Гладиатор")
+        film4 = Film.builder()
+                .name("Гладиатор 123")
                 .description("Исторический художественный фильм режиссёра Ридли Скотта")
                 .releaseDate(LocalDate.of(2000, 5, 1))
                 .duration(155)
@@ -191,8 +208,8 @@ class MarkServiceTest {
                 .directors(new HashSet<>())
                 .build();
 
-        film2 = Film.builder()
-                .name("Властелин колец: Братство Кольца")
+        film5 = Film.builder()
+                .name("Властелин колец: Братство Кольца 123")
                 .description("Power can be held in the smallest of things...")
                 .releaseDate(LocalDate.of(2001, 12, 10))
                 .duration(178)
@@ -201,8 +218,8 @@ class MarkServiceTest {
                 .directors(new HashSet<>())
                 .build();
 
-        film3 = Film.builder()
-                .name("Служебный Роман")
+        film6 = Film.builder()
+                .name("Служебный Роман 123")
                 .description("Комедия Эльдара Рязанова, классика советского кино")
                 .releaseDate(LocalDate.of(1977, 10, 26))
                 .duration(159)

@@ -42,12 +42,37 @@ public class MarkDbStorage implements MarkStorage {
                     .directors(new HashSet<>())
                     .build());
 
-    static final ResultSetExtractor<Map<Long, Map<Long, Double>>> userMarkExtractor = rs -> {
-        Map<Long, Map<Long, Double>> userMarks = new HashMap<>();
+    static final ResultSetExtractor<Map<User, Map<Film, Double>>> userMarkExtractor = rs -> {
+        Map<User, Map<Film, Double>> userMarks = new HashMap<>();
         while (rs.next()) {
-            userMarks.putIfAbsent(rs.getLong("USER_ID"), new HashMap<>());
-            userMarks.get(rs.getLong("USER_ID"))
-                    .putIfAbsent(rs.getLong("FILM_ID"), rs.getDouble("RATE"));
+            User user = User.builder()
+                    .id(rs.getLong("USER_ID"))
+                    .email(rs.getString("EMAIL"))
+                    .login(rs.getString("LOGIN"))
+                    .name(rs.getString("USER_NAME"))
+                    .birthday(rs.getDate("BIRTHDAY").toLocalDate())
+                    .friends(new HashSet<>())
+                    .likeFilms(new HashSet<>())
+                    .build();
+
+            Film film = Film.builder()
+                    .id(rs.getLong("FILM_ID"))
+                    .name(rs.getString("FILM_NAME"))
+                    .description(rs.getString("DESCRIPTION"))
+                    .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
+                    .duration(rs.getInt("DURATION"))
+                    .rate(rs.getDouble("RATE"))
+                    .mpa(new Mpa(rs.getLong("RATING_ID"),
+                            rs.getString("RATING_NAME")))
+                    .genres(new HashSet<>())
+                    .likes(new HashSet<>())
+                    .directors(new HashSet<>())
+                    .build();
+
+            Double mark = rs.getDouble("MARK");
+
+            userMarks.putIfAbsent(user, new HashMap<>());
+            userMarks.get(user).putIfAbsent(film, mark);
         }
         return userMarks;
     };
@@ -147,20 +172,29 @@ public class MarkDbStorage implements MarkStorage {
     }
 
     @Override
-    public Map<Long, Map<Long, Double>> findDataForRecommendations() {
+    public Map<User, Map<Film, Double>> findDataForRecommendations() {
         return jdbcTemplate.query(
                 "SELECT FM.USER_ID, " +
+                        "EMAIL, " +
+                        "LOGIN, " +
+                        "USER_NAME, " +
+                        "BIRTHDAY, " +
+                        "MARK, " +
                         "F.FILM_ID, " +
                         "FILM_NAME, " +
                         "DESCRIPTION, " +
                         "RELEASE_DATE, " +
                         "DURATION, " +
-                        "AVG(MARK) RATE, " +
+                        "R.RATE, " +
                         "F.RATING_ID, " +
                         "RATING_NAME " +
                         "FROM FILMS F " +
                         "JOIN RATING MPA ON F.RATING_ID = MPA.RATING_ID " +
                         "LEFT OUTER JOIN FILM_MARKS FM ON FM.FILM_ID = F.FILM_ID " +
+                        "LEFT OUTER JOIN USERS U ON FM.USER_ID = U.USER_ID " +
+                        "JOIN (SELECT FILM_ID, AVG(MARK) AS RATE " +
+                        "FROM FILM_MARKS " +
+                        "GROUP BY FILM_ID) R ON R.FILM_ID = F.FILM_ID " +
                         "GROUP BY FM.USER_ID, F.FILM_ID " +
                         "ORDER BY RATE DESC;",
                 userMarkExtractor);
