@@ -358,7 +358,7 @@ public class FilmDbStorage implements FilmStorage {
                         "GROUP BY F.FILM_ID;",
                 new MapSqlParameterSource()
                         .addValue("USER_ID", userId),
-                FilmDbStorage.filmMapper);
+                filmMapper);
     }
 
     private MapSqlParameterSource getFilmParams(Film film) {

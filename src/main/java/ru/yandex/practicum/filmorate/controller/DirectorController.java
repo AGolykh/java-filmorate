@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/directors")
 public class DirectorController {
+
     private final DirectorService service;
 
     @GetMapping

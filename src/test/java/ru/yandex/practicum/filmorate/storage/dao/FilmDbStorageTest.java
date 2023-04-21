@@ -81,7 +81,7 @@ class FilmDbStorageTest {
                         "Один ушлый американец ещё со студенческих лет приторговывал наркотиками")
                 .hasFieldOrPropertyWithValue("releaseDate", LocalDate.parse("2019-12-03"))
                 .hasFieldOrPropertyWithValue("duration", 113)
-                .hasFieldOrPropertyWithValue("rate", 0)
+                .hasFieldOrPropertyWithValue("rate", 0.0)
                 .hasFieldOrPropertyWithValue("mpa", new Mpa(2L, "PG"));
     }
 

@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.IncorrectObjectIdException;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -39,7 +38,7 @@ public class DirectorTests {
         jdbcTemplate.update("DELETE FROM USERS;");
         jdbcTemplate.execute("ALTER TABLE USERS ALTER COLUMN USER_ID RESTART WITH 1;");
         jdbcTemplate.update("DELETE FROM DIRECTORS;");
-        jdbcTemplate.execute("ALTER TABLE DIRECTORS ALTER COLUMN director_id RESTART WITH 1;");
+        jdbcTemplate.execute("ALTER TABLE DIRECTORS ALTER COLUMN DIRECTOR_ID RESTART WITH 1;");
         jdbcTemplate.update("DELETE FROM FILMS;");
         jdbcTemplate.execute("ALTER TABLE FILMS ALTER COLUMN FILM_ID RESTART WITH 1;");
     }
@@ -92,7 +91,7 @@ public class DirectorTests {
         addDataDirectors();
         final IncorrectObjectIdException e = assertThrows(IncorrectObjectIdException.class,
                 () -> directorService.updateDirector(new Director(3L, "Sidorov Ivan")));
-        assertEquals("Director 3 Sidorov Ivan is not update.", e.getMessage());
+        assertEquals("Director id: 3 not found.", e.getMessage());
     }
 
     @Test
@@ -106,8 +105,9 @@ public class DirectorTests {
 
     @Test
     void deleteDirector_throwIncorrectParameterException_withoutData() {
-        assertThrows(IncorrectParameterException.class,
+        final IncorrectObjectIdException e = assertThrows(IncorrectObjectIdException.class,
                 () -> directorService.deleteDirector(1L));
+        assertEquals("Director id: 1 not found.", e.getMessage());
     }
 
     @Test
